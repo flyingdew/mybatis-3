@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -385,7 +385,7 @@ public class PooledDataSource implements DataSource {
   }
 
   private int assembleConnectionTypeCode(String url, String username, String password) {
-    return ("" + url + username + password).hashCode();
+    return (url + username + password).hashCode();
   }
 
   protected void pushConnection(PooledConnection conn) throws SQLException {

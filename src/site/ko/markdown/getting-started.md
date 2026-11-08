@@ -19,9 +19,9 @@ author: Clinton Begin, 이동국(한국어 번역)
 
 ## XML에서 SqlSessionFactory 빌드하기
 
-모든 마이바티스 애플리케이션은 SqlSessionFactory 인스턴스를 사용한다. SqlSessionFactory인스턴스는 SqlSessionFactoryBuilder를 사용하여 만들수 있다. SqlSessionFactoryBuilder는 XML설정파일에서 SqlSessionFactory인스턴스를 빌드할 수 있다.
+모든 마이바티스 애플리케이션은 SqlSessionFactory 인스턴스를 사용한다. SqlSessionFactory인스턴스는 SqlSessionFactoryBuilder를 사용하여 만들 수 있다. SqlSessionFactoryBuilder는 XML설정파일에서 SqlSessionFactory인스턴스를 빌드할 수 있다.
 
-XML파일에서 SqlSessionFactory인스턴스를 빌드하는 것은 매우 간단한다. 설정을 위해 클래스패스 자원을 사용하는 것을 추천하나 파일 경로나 `file://` URL로부터 만들어진 InputStream인스턴스를 사용할 수도 있다. 마이바티스는 클래스패스와 다른 위치에서 자원을 로드하는 것으로 좀더 쉽게 해주는 Resources 라는 유틸성 클래스를 가지고 있다.
+XML파일에서 SqlSessionFactory인스턴스를 빌드하는 것은 매우 간단하다. 설정을 위해 클래스패스 자원을 사용하는 것을 추천하나 파일 경로나 `file://` URL로부터 만들어진 InputStream인스턴스를 사용할 수도 있다. 마이바티스는 클래스패스와 다른 위치에서 자원을 로드하는 것으로 좀더 쉽게 해주는 Resources 라는 유틸성 클래스를 가지고 있다.
 
 ```java
 String resource = "org/mybatis/example/mybatis-config.xml";
@@ -29,7 +29,7 @@ InputStream inputStream = Resources.getResourceAsStream(resource);
 SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
 ```
 
-XML설정파일에서 지정하는 마이바티스의 핵심이 되는 설정은 트랜잭션을 제어하기 위한 TransactionManager과 함께 데이터베이스 Connection인스턴스를 가져오기 위한 DataSource 를 포함한다. 세부적인 설정은 조금 뒤에 보고 간단한 예제를 먼저보자.
+XML설정파일에서 지정하는 마이바티스의 핵심이 되는 설정은 트랜잭션을 제어하기 위한 TransactionManager와 함께 데이터베이스 Connection인스턴스를 가져오기 위한 DataSource 를 포함한다. 세부적인 설정은 조금 뒤에 보고 간단한 예제를 먼저보자.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -37,6 +37,7 @@ XML설정파일에서 지정하는 마이바티스의 핵심이 되는 설정은
   PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
   "https://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
+  <properties resource="org/mybatis/example/db.properties"/>
   <environments default="development">
     <environment id="development">
       <transactionManager type="JDBC"/>
@@ -54,7 +55,9 @@ XML설정파일에서 지정하는 마이바티스의 핵심이 되는 설정은
 </configuration>
 ```
 
-좀 더 많은 XML 설정방법이 있지만 위 예제에서는 가장 핵심적인 부분만을 보여주고 있다. XML 가장 위부분에서는 XML 문서의 유효성체크를 위해 필요하다. environment엘리먼트는 트랜잭션 관리와 커넥션 풀링을 위한 환경적인 설정을 나타낸다. mappers엘리먼트는 SQL 코드와 매핑 정의를 가지는 XML 파일인 mapper 의 목록을 지정한다.
+`org/mybatis/example/db.properties`를 클래스패스에 두고 사용할 데이터베이스의 `driver`, `url`, `username`, `password`를 정의하세요.
+
+좀 더 많은 XML 설정 방법이 있지만 위 예제에서는 가장 핵심적인 부분만 보여준다. XML 선언은 선택 사항이고, DOCTYPE 선언은 XML 문서 검증에 사용할 DTD를 지정한다. environment 엘리먼트는 트랜잭션 관리와 커넥션 풀링을 위한 환경 설정을 나타낸다. mappers 엘리먼트는 SQL 코드와 매핑 정의를 담은 XML 파일 또는 애노테이션이 붙은 자바 인터페이스의 목록을 지정한다.
 
 ## XML 을 사용하지 않고 SqlSessionFactory 빌드하기
 
@@ -69,11 +72,11 @@ configuration.addMapper(BlogMapper.class);
 SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
 ```
 
-이 설정에서 추가로 해야 할 일은 Mapper클래스를 추가하는 것이다. Mapper클래스는 SQL 매핑 애노테이션을 가진 자바 클래스이다. 어쨌든 자바 애노테이션의 몇가지 제약과 몇가지 설정방법의 복잡함에도 불구하고 XML 매핑은 세부적인 매핑을 위해 언제든 필요하다. 좀더 세부적인 내용은 조금 뒤 다시 보도록 하자.
+이 설정에서는 매퍼 인터페이스를 등록한다. 매퍼 인터페이스에 SQL 매핑 애노테이션을 정의할 수 있으므로 XML 매퍼가 반드시 필요한 것은 아니다. MyBatis는 같은 클래스패스 경로에 `BlogMapper.xml`이 있으면 자동으로 찾아 로드하므로 애노테이션과 XML 매핑을 함께 사용할 수 있다. 자세한 내용은 뒤에서 설명한다.
 
 ## SqlSessionFactory 에서 SqlSession 만들기
 
-SqlSessionFactory 이름에서 보듯이 SqlSession 인스턴스를 만들수 있다. SqlSession 은 데이터베이스에 대해 SQL명령어를 실행하기 위해 필요한 모든 메소드를 가지고 있다. 그래서 SqlSession 인스턴스를 통해 직접 SQL 구문을 실행할 수 있다. 예를 들면 :
+SqlSessionFactory 이름에서 보듯이 SqlSession 인스턴스를 만들 수 있다. SqlSession 은 데이터베이스에 대해 SQL명령어를 실행하기 위해 필요한 모든 메소드를 가지고 있다. 그래서 SqlSession 인스턴스를 통해 직접 SQL 구문을 실행할 수 있다. 예를 들면 :
 
 ```java
 try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -106,19 +109,19 @@ try (SqlSession session = sqlSessionFactory.openSession()) {
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.mybatis.example.BlogMapper">
-  <select id="selectBlog" resultType="Blog">
+  <select id="selectBlog" resultType="org.mybatis.example.Blog">
     select * from Blog where id = #{id}
   </select>
 </mapper>
 ```
 
-간단한 예제치고는 조금 복잡해 보이지만 실제로는 굉장히 간단하다. 한 개의 매퍼 XML 파일에는 많은 수의 매핑 구문을 정의할 수 있다. XML 도입무의 헤더와 doctype 을 제외하면 나머지는 쉽게 이해되는 구문의 형태이다. 여기선 org.mybatis.example.BlogMapper 네임스페이스에서 selectBlog라는 매핑 구문을 정의했고 이는 결과적으로 org.mybatis.example.BlogMapper.selectBlog형태로 실제 명시되게 된다. 그래서 다음처럼 사용하게 되는 셈이다.
+간단한 예제치고는 조금 복잡해 보이지만 실제로는 굉장히 간단하다. 한 개의 매퍼 XML 파일에는 많은 수의 매핑 구문을 정의할 수 있다. XML 도입부의 헤더와 doctype 을 제외하면 나머지는 쉽게 이해되는 구문의 형태이다. 여기선 org.mybatis.example.BlogMapper 네임스페이스에서 selectBlog라는 매핑 구문을 정의했고 이는 결과적으로 org.mybatis.example.BlogMapper.selectBlog형태로 실제 명시되게 된다. 그래서 다음처럼 사용하게 되는 셈이다.
 
 ```java
 Blog blog = (Blog) session.selectOne("org.mybatis.example.BlogMapper.selectBlog", 101);
 ```
 
-이건 마치 패키지를 포함한 전체 경로의 클래스내 메소드를 호출하는 것과 비슷한 형태이다. 이 이름은 매핑된 select구문의 이름과 파라미터 그리고 리턴타입을 가진 네임스페이스과 같은 이름의 Mapper 클래스와 직접 매핑될 수 있다. 이건 위에서 본것과 같은 Mapper 인터페이스의 메소드를 간단히 호출하도록 허용한다. 위 예제에 대응되는 형태는 아래와 같다.
+이건 마치 패키지를 포함한 전체 경로의 클래스내 메소드를 호출하는 것과 비슷한 형태이다. 이 이름은 매핑된 select구문의 이름과 파라미터 그리고 리턴타입을 가진 네임스페이스와 같은 이름의 Mapper 클래스와 직접 매핑될 수 있다. 이건 위에서 본것과 같은 Mapper 인터페이스의 메소드를 간단히 호출하도록 허용한다. 위 예제에 대응되는 형태는 아래와 같다.
 
 ```java
 BlogMapper mapper = session.getMapper(BlogMapper.class);
@@ -133,12 +136,12 @@ Blog blog = mapper.selectBlog(101);
 
 **네임스페이스(Namespaces)** 가 이전버전에서는 사실 선택사항이었다. 하지만 이제는 패키지경로를 포함한 전체 이름을 가진 구문을 구분하기 위해 필수로 사용해야 한다.
 
-네임스페이스은 인터페이스 바인딩을 가능하게 한다. 네임스페이스을 사용하고 자바 패키지의 네임스페이스을 두면 코드가 깔끔해지고 마이바티스의 사용성이 크게 향상될 것이다.
+네임스페이스는 인터페이스 바인딩을 가능하게 한다. 네임스페이스를 사용하고 자바 패키지의 네임스페이스를 두면 코드가 깔끔해지고 마이바티스의 사용성이 크게 향상될 것이다.
 
 **이름 분석(Name Resolution):** 타이핑을 줄이기 위해 마이바티스는 구문과 결과매핑, 캐시등의 모든 설정엘리먼트를 위한 이름 분석 규칙을 사용한다.
 
 - “com.mypackage.MyMapper.selectAllThings”과 같은 패키지를 포함한 전체 경로명(Fully qualified names)은 같은 형태의 경로가 있다면 그 경로내에서 직접 찾는다.
-- “selectAllThings”과 같은 짧은 형태의 이름은 모호하지 않은 엔트리를 참고하기 위해 사용될 수 있다. 그래서 짧은 이름은 모호해서 에러를 자주 보게 되니 되도록 이면 전체 경로를 사용해야 할 것이다.
+- “selectAllThings”과 같은 짧은 형태의 이름은 모호하지 않은 엔트리를 참고하기 위해 사용될 수 있다. 그래서 짧은 이름은 모호해서 에러를 자주 보게 되니 되도록이면 전체 경로를 사용해야 할 것이다.
 
 ---
 
@@ -170,7 +173,7 @@ public interface BlogMapper {
 
 #### SqlSessionFactoryBuilder
 
-이 클래스는 인스턴스화되어 사용되고 던져질 수 있다. SqlSessionFactory 를 생성한 후 유지할 필요는 없다. 그러므로 SqlSessionFactoryBuilder 인스턴스의 가장 좋은 스코프는 메소드 스코프(예를들면 메소드 지역변수)이다. 여러개의 SqlSessionFactory 인스턴스를 빌드하기 위해 SqlSessionFactoryBuilder를 재사용할 수도 있지만 유지하지 않는 것이 가장 좋다.
+이 클래스는 인스턴스화해서 사용한 뒤 버리면 된다. SqlSessionFactory 를 생성한 후 유지할 필요는 없다. 그러므로 SqlSessionFactoryBuilder 인스턴스의 가장 좋은 스코프는 메소드 스코프(예를들면 메소드 지역변수)이다. 여러개의 SqlSessionFactory 인스턴스를 빌드하기 위해 SqlSessionFactoryBuilder를 재사용할 수도 있지만 유지하지 않는 것이 가장 좋다.
 
 #### SqlSessionFactory
 
@@ -178,7 +181,7 @@ public interface BlogMapper {
 
 #### SqlSession
 
-각각의 쓰레드는 자체적으로 SqlSession인스턴스를 가져야 한다. SqlSession인스턴스는 공유되지 않고 쓰레드에 안전하지도 않다. 그러므로 가장 좋은 스코프는 요청 또는 메소드 스코프이다. SqlSession 을 static 필드나 클래스의 인스턴스 필드로 지정해서는 안된다. 그리고 서블릿 프레임워크의 HttpSession 과 같은 관리 스코프에 둬서도 안된다. 어떠한 종류의 웹 프레임워크를 사용한다면 HTTP 요청과 유사한 스코프에 두는 것으로 고려해야 한다. 달리 말해서 HTTP 요청을 받을때마다 만들고 응답을 리턴할때마다 SqlSession 을 닫을 수 있다. SqlSession 을 닫는 것은 중요하다. 언제나 finally 블록에서 닫아야만 한다. 다음은 SqlSession을 닫는 것을 확인하는 표준적인 형태다.
+각각의 쓰레드는 자체적으로 SqlSession인스턴스를 가져야 한다. SqlSession인스턴스는 공유되지 않고 쓰레드에 안전하지도 않다. 그러므로 가장 좋은 스코프는 요청 또는 메소드 스코프이다. SqlSession 을 static 필드나 클래스의 인스턴스 필드로 지정해서는 안된다. 그리고 서블릿 프레임워크의 HttpSession 과 같은 관리 스코프에 둬서도 안된다. 어떠한 종류의 웹 프레임워크를 사용한다면 HTTP 요청과 유사한 스코프에 두는 것으로 고려해야 한다. 달리 말해서 HTTP 요청을 받을때마다 만들고 응답을 리턴할때마다 SqlSession 을 닫을 수 있다. SqlSession 을 닫는 것은 중요하다. 확실히 닫히도록 try-with-resources를 사용한다. 다음은 SqlSession을 닫는 것을 확인하는 표준적인 형태다.
 
 ```java
 try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -190,7 +193,7 @@ try (SqlSession session = sqlSessionFactory.openSession()) {
 
 #### Mapper 인스턴스
 
-Mapper는 매핑된 구문을 바인딩 하기 위해 만들어야 할 인터페이스이다. mapper 인터페이스의 인스턴스는 SqlSession 에서 생성한다. 그래서 mapper 인스턴스의 가장 좋은 스코프는 SqlSession 과 동일하다. 어쨌든 mapper 인스턴스의 가장 좋은 스코프는 메소드 스코프이다. 사용할 메소드가 호출되면 생성되고 끝난다. 명시적으로 닫을 필요는 없다.
+Mapper는 매핑된 구문을 바인딩 하기 위해 만들어야 할 인터페이스이다. mapper 인터페이스의 인스턴스는 SqlSession 에서 생성한다. 그래서 엄밀히 말하면 mapper 인스턴스의 가장 넓은 스코프는 그것을 얻어온 SqlSession 과 동일하다. 어쨌든 mapper 인스턴스의 가장 좋은 스코프는 메소드 스코프이다. 사용할 메소드가 호출되면 생성되고 끝난다. 명시적으로 닫을 필요는 없다.
 
 ```java
 try (SqlSession session = sqlSessionFactory.openSession()) {

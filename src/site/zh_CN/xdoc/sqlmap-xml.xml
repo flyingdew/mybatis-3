@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-       Copyright 2009-2023 the original author or authors.
+       Copyright 2009-2026 the original author or authors.
 
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@
       </ul>
       <p>下一部分将从语句本身开始来描述每个元素的细节。</p>
 
-      <subsection name="select" id="select">
+      <subsection name="select">
         <p>查询语句是 MyBatis 中最常用的元素之一——光能把数据存到数据库中价值并不大，还要能重新取出来才有用，多数应用也都是查询比修改要频繁。
         MyBatis 的基本原则之一是：在每个插入、更新或删除操作之间，通常会执行多个查询操作。因此，MyBatis
         在查询和结果映射做了相当多的改进。一个简单查询的 select 元素是非常简单的。比如：
@@ -117,7 +117,6 @@ ps.setInt(1,id);]]></source>
   parameterType="int"
   parameterMap="deprecated"
   resultType="hashmap"
-  resultMap="personResultMap"
   flushCache="false"
   useCache="true"
   timeout="10"
@@ -209,7 +208,7 @@ ps.setInt(1,id);]]></source>
               <td><code>resultSetType</code></td>
               <td>
                 FORWARD_ONLY，SCROLL_SENSITIVE, SCROLL_INSENSITIVE 或
-                DEFAULT（等价于 unset） 中的一个，默认值为 unset （依赖数据库驱动）。
+                DEFAULT 中的一个。省略时使用已配置的 <code>defaultResultSetType</code>；指定 DEFAULT 时使用 JDBC 驱动的默认值。
               </td>
             </tr>
             <tr>
@@ -235,14 +234,15 @@ ps.setInt(1,id);]]></source>
             </tr>
             <tr>
               <td><code>affectData</code></td>
-              <td>Set this to true when writing a INSERT, UPDATE or DELETE statement that returns data so that the transaction is controlled properly. Also see <a href="./java-api.html#transaction-control-methods">Transaction Control Method</a>. Default: <code>false</code> (since 3.5.12)
+              <td>编写返回数据的 INSERT、UPDATE 或 DELETE 语句时，请将此设置为 true，以便正确控制事务。另请参阅 <a href="./java-api.html#transaction-control-methods">事务控制方法</a>。默认值: <code>false</code>（3.5.12 起)
               </td>
             </tr>
           </tbody>
         </table>
       </subsection>
 
-      <subsection name="insert, update 和 delete" id="insert_update_and_delete">
+      <subsection name="insert, update 和 delete">
+        <p><a id="insert_update_and_delete"></a></p>
         <p>
           数据变更语句 insert，update 和 delete 的实现非常接近：
         </p>
@@ -442,7 +442,7 @@ ps.setInt(1,id);]]></source>
             <tr>
               <td><code>resultType</code></td>
               <td>
-                结果的类型。通常 MyBatis 可以推断出来，但是为了更加准确，写上也不会有什么问题。MyBatis
+                结果的类型。MyBatis 不会自动推断 <code>selectKey</code> 的结果类型，因此必须显式指定。MyBatis
                 允许将任何简单类型用作主键的类型，包括字符串。如果生成列不止一个，则可以使用包含期望属性的
                 Object 或 Map。
               </td>
@@ -523,13 +523,14 @@ ps.setInt(1,id);]]></source>
 </select>]]></source>
       </subsection>
 
-      <subsection name="参数" id="Parameters">
+      <subsection name="参数">
+        <p><a id="Parameters"></a></p>
         <p>
           之前见到的所有语句都使用了简单的参数形式。但实际上，参数是 MyBatis
           非常强大的元素。对于大多数简单的使用场景，你都不需要使用复杂的参数，比如：
         </p>
 
-        <source><![CDATA[<select id="selectUsers" resultType="User">
+        <source><![CDATA[<select id="selectUsers" parameterType="int" resultType="User">
   select id, username, password
   from users
   where id = #{id}
@@ -604,7 +605,7 @@ ps.setInt(1,id);]]></source>
           参数时，你必须显式设置类型的名称。比如（再次提示，在实际中要像这样不能换行）：
         </p>
 
-        <source><![CDATA[#{middleInitial, mode=OUT, jdbcType=STRUCT, jdbcTypeName=MY_TYPE, resultMap=departmentResultMap}]]></source>
+        <source><![CDATA[#{middleInitial, mode=OUT, jdbcType=STRUCT, jdbcTypeName=MY_TYPE}]]></source>
 
         <p>
           尽管上面这些选项很强大，但大多时候，你只须简单指定属性名，顶多要为可能为空的列指定
@@ -649,7 +650,7 @@ User findByEmail(@Param("email") String email);
           而是可以只写这样一个方法：
           <source><![CDATA[
 @Select("select * from user where ${column} = #{value}")
-User findByColumn(@Param("column") String column, @Param("value") String value);
+User findByColumn(@Param("column") String column, @Param("value") Object value);
 ]]></source>
           其中 <code>${column}</code> 会被直接替换，而 <code>#{value}</code> 会使用 <code>?</code> 预处理。
           这样，就能完成同样的任务：
@@ -671,7 +672,8 @@ User userOfEmail = userMapper.findByColumn("email", "noone@nowhere.com");
         </p>
       </subsection>
 
-      <subsection name="结果映射" id="Result_Maps">
+      <subsection name="结果映射">
+        <p><a id="Result_Maps"></a></p>
         <p>
       <code>resultMap</code> 元素是 MyBatis 中最重要最强大的元素。它可以让你从 90%
           的 JDBC <code>ResultSets</code> 数据提取代码中解放出来，并在一些情形下允许你进行一些
@@ -776,7 +778,7 @@ public class User {
         <source><![CDATA[<resultMap id="userResultMap" type="User">
   <id property="id" column="user_id" />
   <result property="username" column="user_name"/>
-  <result property="password" column="hashed_password"/>
+  <result property="hashedPassword" column="hashed_password"/>
 </resultMap>]]></source>
 
         <p>
@@ -1018,10 +1020,7 @@ public class User {
             <tr>
               <td><code>jdbcType</code></td>
               <td>
-                JDBC 类型，所支持的 JDBC 类型参见这个表格之后的“支持的 JDBC 类型”。
-                只需要在可能执行插入、更新和删除的且允许空值的列上指定 JDBC 类型。这是
-                JDBC 的要求而非 MyBatis 的要求。如果你直接面向 JDBC
-                编程，你需要对可以为空值的列指定这个类型。
+                结果列的 JDBC 类型。当 MyBatis 需要结合 Java 类型为此映射选择类型处理器（TypeHandler）时，请指定该值。
               </td>
             </tr>
             <tr>
@@ -1080,6 +1079,22 @@ public class User {
             <td><code>NULL</code></td>
             <td><code>CURSOR</code></td>
             <td><code>ARRAY</code></td>
+          </tr>
+          <tr>
+            <td><code>STRUCT</code></td>
+            <td><code>JAVA_OBJECT</code></td>
+            <td><code>DISTINCT</code></td>
+            <td><code>REF</code></td>
+            <td><code>DATALINK</code></td>
+            <td><code>ROWID</code></td>
+          </tr>
+          <tr>
+            <td><code>LONGNVARCHAR</code></td>
+            <td><code>SQLXML</code></td>
+            <td><code>DATETIMEOFFSET</code></td>
+            <td><code>TIME_WITH_TIMEZONE</code></td>
+            <td><code>TIMESTAMP_WITH_TIMEZONE</code></td>
+            <td></td>
           </tr>
         </table>
 
@@ -1168,10 +1183,7 @@ public class User {
             <tr>
               <td><code>jdbcType</code></td>
               <td>
-                JDBC 类型，所支持的 JDBC 类型参见这个表格之前的“支持的 JDBC 类型”。
-                只需要在可能执行插入、更新和删除的且允许空值的列上指定 JDBC 类型。这是
-                JDBC 的要求而非 MyBatis 的要求。如果你直接面向 JDBC
-                编程，你需要对可能存在空值的列指定这个类型。
+                结果列的 JDBC 类型。当 MyBatis 需要结合 Java 类型为此映射选择类型处理器（TypeHandler）时，请指定该值。
               </td>
             </tr>
             <tr>
@@ -1207,6 +1219,124 @@ public class User {
             </tr>
           </tbody>
         </table>
+
+<h5>关联或集合的嵌套结果</h5>
+
+<p>以下小节将介绍如何使用 <code>association</code> 和 <code>collection</code> 实现嵌套查询与嵌套结果。从 3.6.0 开始，也可以通过 <code>constructor</code> 映射注入关联和集合。</p>
+
+<p>考虑以下类：</p>
+
+<source><![CDATA[public class User {
+   //...
+   public User(Integer id, String username, List<UserRole> userRoles) {
+     //...
+   }
+}
+
+public class UserRole {
+    // ...
+    public UserRole(Integer id, String role) {
+      // ...
+    }
+}
+]]></source>
+
+<p>我们可以将 <code>UserRole</code> 映射为嵌套结果。MyBatis 会等到结果行处理完成后才创建对象。因此，在创建 <code>User</code> 时，<code>userRoles</code> 已经完整，之后也不能再修改。</p>
+
+<source><![CDATA[<resultMap id="userResultMap" type="User">
+  <constructor>
+    <idArg column="id" javaType="int" />
+    <arg column="username" javaType="String" />
+    <arg javaType="List" resultMap="userRoleResultMap" columnPrefix="role_"/>
+  </constructor>
+</resultMap>
+]]></source>
+
+<p>为了让本例中的对象完全不可变，也可以对 <code>UserRole</code> 使用构造方法注入。</p>
+
+<source><![CDATA[<resultMap id="userRoleResultMap" type="UserRole">
+  <constructor>
+    <idArg column="id" javaType="int" />
+    <arg column="role" javaType="String" />
+  </constructor>
+</resultMap>
+]]></source>
+
+<p>必须明确告诉 MyBatis：结果集已经按主结果行排序，取得新的主结果行后，之前主结果行的数据不会再次出现。可以通过语句的 <code>resultOrdered</code> 属性进行设置：</p>
+
+<source><![CDATA[<select id="getAllUsers" resultMap="userResultMap" resultOrdered="true">
+    select
+      u.id,
+      u.username,
+      r.id as role_id,
+      r.role as role_role
+    from user u
+      left join user_role ur on u.id = ur.user_id
+      left join role r on r.id = ur.role_id
+    order by u.id, r.id
+</select>
+]]></source>
+
+<p>请注意，示例中的 <code>order by</code> 用于确保结果顺序正确。输出结果大致如下：</p>
+
+<table class="table table-striped">
+<thead>
+<tr class="a">
+<th>row_nr</th>
+<th>u.id</th>
+<th>u.username</th>
+<th>r.id</th>
+<th>r.role</th></tr></thead><tbody>
+<tr class="b">
+<td>1</td>
+<td>1</td>
+<td>John</td>
+<td>1</td>
+<td>Admins</td></tr>
+<tr class="a">
+<td>2</td>
+<td>1</td>
+<td>John</td>
+<td>2</td>
+<td>Users</td></tr>
+<tr class="b">
+<td>3</td>
+<td>2</td>
+<td>Jack</td>
+<td>null</td>
+<td>null</td></tr>
+<tr class="a">
+<td>4</td>
+<td>3</td>
+<td>Peter</td>
+<td>2</td>
+<td>Users</td></tr>
+<tr class="b">
+<td>5</td>
+<td>3</td>
+<td>Peter</td>
+<td>3</td>
+<td>Maintainers</td></tr>
+<tr class="a">
+<td>6</td>
+<td>3</td>
+<td>Peter</td>
+<td>4</td>
+<td>Approvers</td></tr></tbody>
+</table>
+
+<p>执行查询后将得到以下结果：</p>
+
+<source><![CDATA[User{username=John, roles=[Admins, Users]}
+User{username=Jack, roles=[]}
+User{username=Peter, roles=[Users, Maintainers, Approvers]}
+]]></source>
+
+<p>如果这里的第 5 行由于某种 <code>ORDER BY</code> 排序而紧接着出现在第 1 行之后，MyBatis 就无法通过构造方法集合映射正确、完整地构建 <code>John</code> 用户。</p>
+
+<p>请注意，混合映射的支持有限：将属性映射与嵌套的构造方法映射结合使用可能会失败。
+使用此功能时，最好在整个映射层级中都采用不可变对象的构造方法映射。</p>
+
 
         <h4>关联</h4>
 
@@ -1268,10 +1398,7 @@ public class User {
             <tr>
               <td><code>jdbcType</code></td>
               <td>
-                JDBC 类型，所支持的 JDBC 类型参见这个表格之前的“支持的 JDBC 类型”。
-                只需要在可能执行插入、更新和删除的且允许空值的列上指定 JDBC 类型。这是
-                JDBC 的要求而非 MyBatis 的要求。如果你直接面向
-                JDBC 编程，你需要对可能存在空值的列指定这个类型。
+                结果列的 JDBC 类型。当 MyBatis 需要结合 Java 类型为此映射选择类型处理器（TypeHandler）时，请指定该值。
               </td>
             </tr>
             <tr>
@@ -1542,6 +1669,31 @@ public class User {
     columnPrefix="co_" />
 </resultMap>]]></source>
 
+
+<h4>关联中的嵌套游标</h4>
+
+<p>某些数据库可以将 <code>java.sql.ResultSet</code> 作为列值返回。<br />
+下面是相应的语句和结果映射。</p>
+
+<source><![CDATA[<resultMap id="blogResult" type="Blog">
+  <id property="id" column="id" />
+  <result property="title" column="title" />
+  <association property="author" column="author" jdbcType="CURSOR">
+    <id property="id" column="id" />
+    <result property="username" column="username" />
+  </association>
+</resultMap>
+
+<select id="selectBlog" resultMap="blogResult">
+  select b.id, b.title, cursor(
+    select a.id, a.username from author a where b.author_id = a.id
+  ) author from blog b
+</select>]]></source>
+
+<p>与上一节中的示例相比，主要区别在于 <code>&lt;association&gt;</code> 元素的 <code>jdbcType</code> 属性。<br />
+值 <code>CURSOR</code> 表示 <code>author</code> 列的值是嵌套游标。</p>
+
+
         <h4>关联的多结果集（ResultSet）</h4>
 
         <table>
@@ -1692,7 +1844,7 @@ SELECT * FROM AUTHOR WHERE ID = #{id}]]></source>
   B.author_id as blog_author_id,
   P.id as post_id,
   P.subject as post_subject,
-  P.body as post_body,
+  P.body as post_body
   from Blog B
   left outer join Post P on B.id = P.blog_id
   where B.id = #{id}
@@ -1732,6 +1884,29 @@ SELECT * FROM AUTHOR WHERE ID = #{id}]]></source>
   <result property="body" column="body"/>
 </resultMap>]]></source>
 
+
+<h4>集合中的嵌套游标</h4>
+
+<p>嵌套游标可以返回多行。<br />
+与 <code>&lt;association&gt;</code> 一样，只需在 <code>&lt;collection&gt;</code> 元素中指定 <code>jdbcType="CURSOR"</code>。</p>
+
+<source><![CDATA[<resultMap id="blogResult" type="Blog">
+  <id property="id" column="id" />
+  <result property="title" column="title" />
+  <collection property="posts" column="posts" jdbcType="CURSOR">
+    <id property="id" column="id" />
+    <result property="subject" column="subject" />
+    <result property="body" column="body" />
+  </collection>
+</resultMap>
+
+<select id="selectBlog" resultMap="blogResult">
+  select b.id, b.title, cursor(
+    select p.id, p.subject, p.body from post p where p.blog_id = b.id
+  ) posts from blog b
+</select>]]></source>
+
+
         <h4>集合的多结果集（ResultSet）</h4>
 
         <p>
@@ -1744,7 +1919,7 @@ SELECT * FROM POST WHERE BLOG_ID = #{id}]]></source>
 
         <p>在映射语句中，必须通过 <code>resultSets</code> 属性为每个结果集指定一个名字，多个名字使用逗号隔开。</p>
 
-        <source><![CDATA[<select id="selectBlog" resultSets="blogs,posts" resultMap="blogResult">
+        <source><![CDATA[<select id="selectBlog" resultSets="blogs,posts" resultMap="blogResult" statementType="CALLABLE">
   {call getBlogsAndPosts(#{id,jdbcType=INTEGER,mode=IN})}
 </select>]]></source>
 
@@ -1844,17 +2019,17 @@ SELECT * FROM POST WHERE BLOG_ID = #{id}]]></source>
   <result property="model" column="model"/>
   <result property="color" column="color"/>
   <discriminator javaType="int" column="vehicle_type">
-    <case value="1" resultType="carResult">
+    <case value="1" resultType="Car">
       <result property="doorCount" column="door_count" />
     </case>
-    <case value="2" resultType="truckResult">
+    <case value="2" resultType="Truck">
       <result property="boxSize" column="box_size" />
       <result property="extendedCab" column="extended_cab" />
     </case>
-    <case value="3" resultType="vanResult">
+    <case value="3" resultType="Van">
       <result property="powerSlidingDoor" column="power_sliding_door" />
     </case>
-    <case value="4" resultType="suvResult">
+    <case value="4" resultType="SUV">
       <result property="allWheelDrive" column="all_wheel_drive" />
     </case>
   </discriminator>
@@ -1869,7 +2044,8 @@ SELECT * FROM POST WHERE BLOG_ID = #{id}]]></source>
 
       </subsection>
 
-      <subsection name="自动映射" id="Auto-mapping">
+      <subsection name="自动映射">
+        <p><a id="Auto-mapping"></a></p>
 
         <p>
            正如你在前面一节看到的，在简单的场景下，MyBatis
@@ -1904,7 +2080,7 @@ SELECT * FROM POST WHERE BLOG_ID = #{id}]]></source>
 </select>]]></source>
 
         <source><![CDATA[<resultMap id="userResultMap" type="User">
-  <result property="password" column="hashed_password"/>
+  <result property="hashedPassword" column="hashed_password"/>
 </resultMap>]]></source>
 
         <p>
@@ -1933,7 +2109,7 @@ SELECT * FROM POST WHERE BLOG_ID = #{id}]]></source>
   select
     B.id,
     B.title,
-    A.username,
+    A.username
   from Blog B left outer join Author A on B.author_id = A.id
   where B.id = #{id}
 </select>]]></source>
@@ -1959,12 +2135,13 @@ SELECT * FROM POST WHERE BLOG_ID = #{id}]]></source>
         </p>
 
         <source><![CDATA[<resultMap id="userResultMap" type="User" autoMapping="false">
-  <result property="password" column="hashed_password"/>
+  <result property="hashedPassword" column="hashed_password"/>
 </resultMap>]]></source>
 
       </subsection>
 
-      <subsection name="缓存" id="cache">
+      <subsection name="缓存">
+        <p><a id="cache"></a></p>
         <p>
           MyBatis 内置了一个强大的事务性查询缓存机制，它可以非常方便地配置和定制。
           为了使它更加强大而且易于配置，我们对 MyBatis 3 中的缓存实现进行了许多改进。
@@ -1982,7 +2159,7 @@ SELECT * FROM POST WHERE BLOG_ID = #{id}]]></source>
         </p>
 
         <ul>
-          <li>映射语句文件中的所有 select 语句的结果将会被缓存。</li>
+          <li>启用 <code>cacheEnabled</code> 且语句的 <code>useCache</code> 为 true 时，映射语句文件中的普通 select 查询可以使用二级缓存；使用自定义 ResultHandler 的查询不会写入缓存，游标查询则完全绕过缓存。</li>
           <li>映射语句文件中的所有 insert、update 和 delete 语句会刷新缓存。</li>
           <li>缓存会使用最近最少使用算法（LRU, Least Recently Used）算法来清除不需要的缓存。</li>
           <li>缓存不会定时进行刷新（也就是说，没有刷新间隔）。</li>
@@ -2071,7 +2248,6 @@ SELECT * FROM POST WHERE BLOG_ID = #{id}]]></source>
   int getSize();
   void putObject(Object key, Object value);
   Object getObject(Object key);
-  boolean hasKey(Object key);
   Object removeObject(Object key);
   void clear();
 }]]></source>

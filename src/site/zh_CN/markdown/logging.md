@@ -1,6 +1,8 @@
 title: MyBatis 3 | 日志
 author: Clinton Begin, Nan Lei
 
+<h1 class="d-none">Avoid blank site</h1>
+
 ## 日志
 
 Mybatis 通过使用内置的日志工厂提供日志功能。内置日志工厂将会把日志工作委托给下面的实现之一：
@@ -13,7 +15,7 @@ Mybatis 通过使用内置的日志工厂提供日志功能。内置日志工厂
 
 MyBatis 内置日志工厂基于运行时自省机制选择合适的日志工具。它会使用第一个查找得到的工具（按上文列举的顺序查找）。如果一个都未找到，日志功能就会被禁用。
 
-不少应用服务器（如 Tomcat 和 WebShpere）的类路径中已经包含 Commons Logging，所以在这种配置环境下的 MyBatis 会把它作为日志工具，记住这点非常重要。这将意味着，在诸如 WebSphere 的环境中，它提供了 Commons Logging 的私有实现，你的 Log4J 配置将被忽略。MyBatis 将你的 Log4J 配置忽略掉是相当令人郁闷的（事实上，正是因为在这种配置环境下，MyBatis 才会选择使用 Commons Logging 而不是 Log4J）。如果你的应用部署在一个类路径已经包含 Commons Logging 的环境中，而你又想使用其它日志工具，你可以通过在 MyBatis 配置文件 mybatis-config.xml 里面添加一项 setting 来选择别的日志工具。
+不少应用服务器（如 Tomcat 和 WebSphere）的类路径中已经包含 Commons Logging，所以在这种配置环境下的 MyBatis 会把它作为日志工具，记住这点非常重要。这将意味着，在诸如 WebSphere 的环境中，它提供了 Commons Logging 的私有实现，你的 Log4J 配置将被忽略。MyBatis 将你的 Log4J 配置忽略掉是相当令人郁闷的（事实上，正是因为在这种配置环境下，MyBatis 才会选择使用 Commons Logging 而不是 Log4J）。如果你的应用部署在一个类路径已经包含 Commons Logging 的环境中，而你又想使用其它日志工具，你可以通过在 MyBatis 配置文件 mybatis-config.xml 里面添加一项 setting 来选择别的日志工具。
 
 ```xml
 <configuration>
@@ -38,7 +40,7 @@ org.apache.ibatis.logging.LogFactory.useCommonsLogging();
 org.apache.ibatis.logging.LogFactory.useStdOutLogging();
 ```
 
-如果你决定要调用以上某个方法，请在调用其它 MyBatis 方法之前调用它。另外，仅当运行时类路径中存在该日志工具时，调用与该日志工具对应的方法才会生效，否则 MyBatis 一概忽略。如你环境中并不存在 Log4J2，你却调用了相应的方法，MyBatis 就会忽略这一调用，转而以默认的查找顺序查找日志工具。
+如果你决定调用以上某个方法，请在调用其它 MyBatis 方法之前调用它。请求的日志实现必须在运行时类路径中可用。例如，如果选择 Log4J2 但运行时缺少该实现，MyBatis 会抛出 `LogException`。只有在未显式选择日志实现而初始化 MyBatis 日志时，才会自动查找其它实现。
 
 关于 SLF4J、Apache Commons Logging、Apache Log4J 和 JDK Logging 的 API 介绍不在本文档介绍范围内。不过，下面的例子可以作为一个快速入门。关于这些日志框架的更多信息，可以参考以下链接：
 
@@ -162,7 +164,7 @@ public interface BlogMapper {
 
 你应该注意到了，为映射器接口和 XML 文件添加日志功能的语句毫无差别。
 
-<span class="label important">注意</span> 如果你使用的是 SLF4J 或 Log4j 2，MyBatis 将以 `MYBATIS` 这个值进行调用。
+<span class="label important">注意</span> 使用 Log4j 2 时，MyBatis 会使用 `MYBATIS` 标记。使用 SLF4J 时，仅当日志记录器支持 location-aware API 才会使用该标记；回退的 SLF4J 日志记录器不会使用标记。
 
 配置文件 `log4j.properties` 的余下内容是针对日志输出源的，这一内容已经超出本文档范围。关于 Logback 的更多内容，可以参考[Logback](https://logback.qos.ch/) 的网站。不过，你也可以简单地做做实验，看看不同的配置会产生怎样的效果。
 
@@ -178,8 +180,8 @@ public interface BlogMapper {
 ```
 
 ```xml
-<!-- log4j2.xml -->
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- log4j2.xml -->
 <Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
 
   <Appenders>
@@ -227,7 +229,7 @@ log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n
 handlers=java.util.logging.ConsoleHandler
 .level=SEVERE
 
-org.mybatis.example.BlogMapper=FINER
+org.mybatis.example.BlogMapper.level=FINER
 
 java.util.logging.ConsoleHandler.level=ALL
 java.util.logging.ConsoleHandler.formatter=java.util.logging.SimpleFormatter

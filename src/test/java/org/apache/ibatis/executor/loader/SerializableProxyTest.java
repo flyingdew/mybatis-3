@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2026 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,10 +17,11 @@ package org.apache.ibatis.executor.loader;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
@@ -110,7 +111,7 @@ public abstract class SerializableProxyTest {
   }
 
   @Test
-  void shouldSerizaliceAFullLoadedObjectToOriginalClass() throws Exception {
+  void shouldSerializeAFullLoadedObjectToOriginalClass() throws Exception {
     Object proxy = proxyFactory.createProxy(author, new ResultLoaderMap(), new Configuration(),
         new DefaultObjectFactory(), new ArrayList<>(), new ArrayList<>());
     Object proxy2 = deserialize(serialize((Serializable) proxy));
@@ -119,12 +120,7 @@ public abstract class SerializableProxyTest {
 
   @Test
   void shouldGenerateWriteReplace() throws Exception {
-    try {
-      author.getClass().getDeclaredMethod("writeReplace");
-      fail("Author should not have a writeReplace method");
-    } catch (NoSuchMethodException e) {
-      // ok
-    }
+    assertThrows(NoSuchMethodException.class, () -> author.getClass().getDeclaredMethod("writeReplace"));
     Object proxy = proxyFactory.createProxy(author, new ResultLoaderMap(), new Configuration(),
         new DefaultObjectFactory(), new ArrayList<>(), new ArrayList<>());
     proxy.getClass().getDeclaredMethod("writeReplace");
@@ -134,11 +130,9 @@ public abstract class SerializableProxyTest {
   void shouldNotGenerateWriteReplaceItThereIsAlreadyOne() {
     AuthorWithWriteReplaceMethod beanWithWriteReplace = new AuthorWithWriteReplaceMethod(999, "someone", "!@#@!#!@#",
         "someone@somewhere.com", "blah", Section.NEWS);
-    try {
+    Assertions.assertDoesNotThrow(() -> {
       beanWithWriteReplace.getClass().getDeclaredMethod("writeReplace");
-    } catch (NoSuchMethodException e) {
-      fail("Bean should declare a writeReplace method");
-    }
+    }, "Bean should declare a writeReplace method");
     Object proxy = proxyFactory.createProxy(beanWithWriteReplace, new ResultLoaderMap(), new Configuration(),
         new DefaultObjectFactory(), new ArrayList<>(), new ArrayList<>());
     Class<?>[] interfaces = proxy.getClass().getInterfaces();
@@ -187,6 +181,20 @@ public abstract class SerializableProxyTest {
     byte[] ser = serialize((Serializable) proxy);
     Author author2 = (Author) deserialize(ser);
     assertEquals(999, author2.getId());
+  }
+
+  @Test
+  void shouldApplyStreamFilterToSerializedProxyState() throws Exception {
+    ResultLoaderMap loader = new ResultLoaderMap();
+    loader.addLoader("id", null, null);
+    Object proxy = proxyFactory.createProxy(author, loader, new Configuration(), new DefaultObjectFactory(),
+        new ArrayList<>(), new ArrayList<>());
+    byte[] ser = serialize((Serializable) proxy);
+    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(ser))) {
+      ois.setObjectInputFilter(info -> Author.class.equals(info.serialClass()) ? ObjectInputFilter.Status.REJECTED
+          : ObjectInputFilter.Status.UNDECIDED);
+      Assertions.assertThrows(ObjectStreamException.class, ois::readObject);
+    }
   }
 
   byte[] serialize(Serializable value) throws Exception {

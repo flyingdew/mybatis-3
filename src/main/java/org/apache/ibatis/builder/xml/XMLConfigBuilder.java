@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2026 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -267,7 +267,6 @@ public class XMLConfigBuilder extends BaseBuilder {
     configuration.setProxyFactory((ProxyFactory) createInstance(props.getProperty("proxyFactory")));
     configuration.setLazyLoadingEnabled(booleanValueOf(props.getProperty("lazyLoadingEnabled"), false));
     configuration.setAggressiveLazyLoading(booleanValueOf(props.getProperty("aggressiveLazyLoading"), false));
-    configuration.setMultipleResultSetsEnabled(booleanValueOf(props.getProperty("multipleResultSetsEnabled"), true));
     configuration.setUseColumnLabel(booleanValueOf(props.getProperty("useColumnLabel"), true));
     configuration.setUseGeneratedKeys(booleanValueOf(props.getProperty("useGeneratedKeys"), false));
     configuration.setDefaultExecutorType(ExecutorType.valueOf(props.getProperty("defaultExecutorType", "SIMPLE")));
@@ -293,6 +292,7 @@ public class XMLConfigBuilder extends BaseBuilder {
         booleanValueOf(props.getProperty("argNameBasedConstructorAutoMapping"), false));
     configuration.setDefaultSqlProviderType(resolveClass(props.getProperty("defaultSqlProviderType")));
     configuration.setNullableOnForEach(booleanValueOf(props.getProperty("nullableOnForEach"), false));
+    configuration.setIgnoreParameterMetaData(booleanValueOf(props.getProperty("ignoreParameterMetaData"), false));
   }
 
   private void environmentsElement(XNode context) throws Exception {

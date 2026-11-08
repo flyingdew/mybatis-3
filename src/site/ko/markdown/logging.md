@@ -1,6 +1,8 @@
 title: 마이바티스 3 | 로깅
 author: Clinton Begin, 이동국(한국어 번역)
 
+<h1 class="d-none">Avoid blank site</h1>
+
 ## Logging
 
 마이바티스는 내부 로그 팩토리를 사용하여 로깅 정보를 제공한다. 내부 로그 팩토리는 로깅 정보를 다른 로그 구현체 중 하나에 전달한다.
@@ -13,7 +15,17 @@ author: Clinton Begin, 이동국(한국어 번역)
 
 로깅 솔루션은 내부 마이바티스 로그 팩토리의 런타임 체크를 통해 선택된다. 마이바티스 로그 팩토리는 가능하면 첫번째 구현체를 사용할 것이다(위 로깅 구현체의 나열 순서는 내부적으로 선택하는 우선순위이다). 만약 마이바티스가 위 구현체중 하나도 찾지 못한다면 로깅을 하지 않을 것이다.
 
-많은 환경은 애플리케이션 서버(좋은 예는 톰캣과 웹스피어)의 클래스패스의 일부로 JCL 을 사용한다. 이러한 환경을 아는 것이 중요하다. 마이바티스는 로깅 구현체로 JCL 을 사용할 것이다. 웹스피어와 같은 환경에서 Log4J 설정은 무시될 것이다. 왜냐하면 웹스피어는 자체 JCL 구현체를 제공하기 때문이다. 이러한 사항은 불만스러울수 있다. 왜냐하면 마이바티스는 당신의 Log4J 설정을 무시하는 것처럼 보일수도 있기 때문이다. (사실 마이바티스는 당신의 Log4J 설정을 무시한다. 왜냐하면 마이바티스는 이러한 환경에서 JCL 을 사용할 것이기 때문이다.) 만약 당신의 애플리케이션이 클래스패스에 JCL 을 포함한 환경에서 돌아가지만 다른 로깅 구현체 중 하나를 더 선호한다면 다음의 메소드 중 하나를 호출하여 다른 로깅 구현체를 선택 할 수 있다.
+많은 환경은 애플리케이션 서버(좋은 예는 톰캣과 웹스피어)의 클래스패스의 일부로 JCL 을 사용한다. 이러한 환경을 아는 것이 중요하다. 마이바티스는 로깅 구현체로 JCL 을 사용할 것이다. 웹스피어와 같은 환경에서 Log4J 설정은 무시될 것이다. 왜냐하면 웹스피어는 자체 JCL 구현체를 제공하기 때문이다. 이러한 사항은 불만스러울수 있다. 왜냐하면 마이바티스는 당신의 Log4J 설정을 무시하는 것처럼 보일수도 있기 때문이다. (사실 마이바티스는 당신의 Log4J 설정을 무시한다. 왜냐하면 마이바티스는 이러한 환경에서 JCL 을 사용할 것이기 때문이다.) 클래스패스에 JCL 이 포함된 환경에서 다른 로깅 구현체를 사용하려면 `mybatis-config.xml`에 다음과 같이 설정할 수 있다.
+
+```xml
+<configuration>
+  <settings>
+    <setting name="logImpl" value="LOG4J"/>
+  </settings>
+</configuration>
+```
+
+또는 다른 마이바티스 메소드를 호출하기 전에 다음 메소드 중 하나를 호출할 수 있다.
 
 ```java
 org.apache.ibatis.logging.LogFactory.useSlf4jLogging();
@@ -24,9 +36,9 @@ org.apache.ibatis.logging.LogFactory.useCommonsLogging();
 org.apache.ibatis.logging.LogFactory.useStdOutLogging();
 ```
 
-마이바티스가 메소드를 호출하기 전에 위 메소드 중 하나를 호출해야 한다. 이 메소드들은 런타임 클래스패스에 구현체가 존재하면 그 로그 구현체를 사용하게 한다. 예를들어 Log4J2 로깅을 선택했지만 런타임에 Log4J2 구현체가 클래스패스에 없다면 마이바티스는 Log4J2 구현체의 사용을 무시하고 로깅 구현체를 찾아 다시 사용할 것이다.
+이 메소드로 지정한 로깅 구현체는 런타임 클래스패스에서 사용할 수 있어야 한다. 예를 들어 Log4J2를 선택했는데 런타임에 해당 구현체가 없다면 마이바티스는 `LogException`을 던진다. 다른 구현체를 자동으로 탐색하는 동작은 로깅 구현체를 명시하지 않고 초기화할 때만 수행된다.
 
-SLF4J, Jakarta Commons 로깅, Log4J 그리고 JDK 로깅 API 에 대한 설명은 이 문서의 범위를 벗어난다. 이러한 로깅 관련 프레임워크에 대해 좀더 알고 싶다면 개별 위치에서 좀더 많은 정보를 얻을 수 있을 것이다.
+SLF4J, Apache Commons Logging, Apache Log4J 그리고 JDK 로깅 API 에 대한 설명은 이 문서의 범위를 벗어난다. 이러한 로깅 관련 프레임워크에 대해 좀더 알고 싶다면 개별 위치에서 좀더 많은 정보를 얻을 수 있을 것이다.
 
 - [SLF4J](https://www.slf4j.org/)
 - [Apache Commons Logging](https://commons.apache.org/proper/commons-logging/)
@@ -41,11 +53,11 @@ SLF4J, Jakarta Commons 로깅, Log4J 그리고 JDK 로깅 API 에 대한 설명�
 
 #### 첫번째 단계 : SLF4J + Logback JAR 파일 추가하기
 
-SLF4J(Logback)를 사용하기 때문에 애플리케이션에 JAR 파일이 있어야 한다. Log4J 를 사용하기 위해 애플리케이션의 클래스패스에 JAR 파일을 추가할 필요가 있다. 위 URL 에서 SLF4J(Logback) 를 다운로드 할 수 있다.
+SLF4J(Logback)를 사용하기 때문에 애플리케이션에 필요한 JAR 파일을 클래스패스에 추가해야 한다. 위 URL에서 SLF4J(Logback)를 다운로드할 수 있다.
 
 웹이나 기업용 애플리케이션에서는 `WEB-INF/lib` 디렉터리에 `logback-classic.jar` ,`logback-core.jar` and `slf4j-api.jar` 파일을 추가할 수 있다. 단독으로 실행되는 애플리케이션에서는 JVM의 `-classpath` 시작 파라미터에서 간단히 추가할 수 있다.
 
-If you use the maven, you can download jar files by adding following settings on your `pom.xml`.
+메이븐을 사용한다면 `pom.xml` 에 다음 설정을 추가해서 jar 파일을 내려받을 수 있다.
 
 ```xml
 <dependency>
@@ -116,7 +128,7 @@ finer레벨로 로깅을 하고자 한다면 전체 매퍼 파일대신 특정 �
 </logger>
 ```
 
-다음처럼 매퍼 인터페이스가 아닌 매퍼 XML을 사용하다면 어떻게 해야 할까?
+다음처럼 매퍼 인터페이스가 아닌 매퍼 XML을 사용한다면 어떻게 해야 할까?
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -148,6 +160,8 @@ finer레벨로 로깅을 하고자 한다면 전체 매퍼 파일대신 특정 �
 
 앞서 언급한것처럼 매퍼 인터페이스와 XML매퍼 파일간의 차이는 없다.
 
+<span class="label important">참고</span> Log4j 2에서는 `MYBATIS` 마커를 사용한다. SLF4J에서는 로거가 location-aware API를 지원할 때만 이 마커를 사용하며, 대체 SLF4J 로거는 마커를 사용하지 않는다.
+
 `logback.xml` 파일의 나머지는 어펜더(appender)를 설정하기 위해 사용했다. 어펜더는 이 문서의 범위를 넘어선다. [Logback](https://logback.qos.ch/) 웹사이트에서 좀더 많은 정보를 얻을 수 있다. 설정파일간의 차이는 실행을 해보면 간단히 확인할 수 있다.
 
 #### Configuration example for Log4j 2
@@ -162,8 +176,8 @@ finer레벨로 로깅을 하고자 한다면 전체 매퍼 파일대신 특정 �
 ```
 
 ```xml
-<!-- log4j2.xml -->
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- log4j2.xml -->
 <Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
 
   <Appenders>
@@ -211,7 +225,7 @@ log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n
 handlers=java.util.logging.ConsoleHandler
 .level=SEVERE
 
-org.mybatis.example.BlogMapper=FINER
+org.mybatis.example.BlogMapper.level=FINER
 
 java.util.logging.ConsoleHandler.level=ALL
 java.util.logging.ConsoleHandler.formatter=java.util.logging.SimpleFormatter

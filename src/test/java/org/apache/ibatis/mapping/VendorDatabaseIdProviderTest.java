@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2026 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -13,10 +13,11 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package org.apache.ibatis.mapping;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,17 +38,19 @@ class VendorDatabaseIdProviderTest {
   @Test
   void shouldNpeBeThrownIfDataSourceIsNull() {
     VendorDatabaseIdProvider provider = new VendorDatabaseIdProvider();
-    try {
-      provider.getDatabaseId(null);
-      fail("Should NullPointerException be thrown.");
-    } catch (NullPointerException e) {
-      // pass
-    }
+    assertThrows(NullPointerException.class, () -> provider.getDatabaseId(null));
   }
 
   @Test
   void shouldProductNameBeReturnedIfPropertiesIsNull() throws Exception {
     VendorDatabaseIdProvider provider = new VendorDatabaseIdProvider();
+    assertEquals(PRODUCT_NAME, provider.getDatabaseId(mockDataSource()));
+  }
+
+  @Test
+  void shouldProductNameBeReturnedIfPropertiesIsEmpty() throws Exception {
+    VendorDatabaseIdProvider provider = new VendorDatabaseIdProvider();
+    provider.setProperties(new Properties());
     assertEquals(PRODUCT_NAME, provider.getDatabaseId(mockDataSource()));
   }
 
@@ -79,12 +82,7 @@ class VendorDatabaseIdProviderTest {
     VendorDatabaseIdProvider provider = new VendorDatabaseIdProvider();
     Properties properties = new Properties();
     properties.put("Ewok DB", "ewok");
-    try {
-      provider.getDatabaseId(dataSource);
-      fail("Should BuilderException be thrown.");
-    } catch (BuilderException e) {
-      // pass
-    }
+    assertThrows(BuilderException.class, () -> provider.getDatabaseId(dataSource));
   }
 
   private DataSource mockDataSource() throws SQLException {
